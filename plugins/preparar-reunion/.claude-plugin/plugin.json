@@ -1,0 +1,7 @@
+{
+  "name": "preparar-reunion",
+  "description": "Prepara una reunión con el cliente: guía visual (artifact) en castellano y francés con capturas de producción marcadas. Novedades desde la última reunión o guía de pruebas paso a paso.",
+  "version": "1.0.0",
+  "author": { "name": "Adrian Rodriguez" },
+  "repository": "https://github.com/adrianrodriguez-alt/koralya-plugins"
+}

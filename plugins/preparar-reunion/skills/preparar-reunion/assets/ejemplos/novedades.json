@@ -1,0 +1,62 @@
+{
+ "tipo": "novedades",
+ "cliente": {"nombre": "Acme", "logo": "logo_ejemplo.svg"},
+ "color": "#0052b7",
+ "indice": true,
+ "accesos": [
+  {"nombre": {"es": "Aplicación", "fr": "Application"}, "url": "https://app.acme.example",
+   "filas": [
+    {"nivel": {"es": "Administrador", "fr": "Administrateur"}, "c": "#7c3aed", "u": "admin.demo@acme.example", "m": "Demo-Admin-0000",
+     "ve": {"es": "Todo, incluida la configuración.", "fr": "Tout, y compris la configuration."}},
+    {"nivel": {"es": "Comercial", "fr": "Commercial"}, "c": "#0052b7", "u": "commercial.demo@acme.example", "m": "Demo-Com-0000",
+     "ve": {"es": "Prospects, devis y pipeline.", "fr": "Prospects, devis et pipeline."}}
+   ]}
+ ],
+ "textos": {
+  "es": {"sur": "Aplicación Acme · Koralya Tech", "titre": "Novedades desde la reunión del 02/11/2026",
+         "pour": "Para Acme", "par": "Del 02/11 al 16/11/2026 · Adrián",
+         "abrir": "Abrir en la aplicación",
+         "pied": "Koralya Tech para Acme · capturas y vídeos hechos en producción el 16/11/2026 · los enlaces piden iniciar sesión"},
+  "fr": {"sur": "Application Acme · Koralya Tech", "titre": "Les nouveautés depuis la réunion du 02/11/2026",
+         "pour": "Pour Acme", "par": "Du 02/11 au 16/11/2026 · Adrián",
+         "abrir": "Ouvrir dans l'application",
+         "pied": "Koralya Tech pour Acme · captures et vidéos faites en production le 16/11/2026 · les liens demandent une connexion"}
+ },
+ "zonas": [
+  {"id": "commercial", "es": ["Comercial", "prospects y pipeline"], "fr": ["Commercial", "prospects et pipeline"]},
+  {"id": "accueil", "es": ["Inicio", "en el móvil"], "fr": ["Accueil", "sur mobile"]}
+ ],
+ "origenes": [
+  {"id": "direccion", "color": "#0052b7", "es": "Dirección", "fr": "Direction", "reunion": true},
+  {"id": "ticket", "color": "#b45309", "es": "Tickets", "fr": "Tickets", "ticket": true},
+  {"id": "koralya", "color": "#7c3aed", "es": "Koralya", "fr": "Koralya"}
+ ],
+ "items": [
+  {"id": "nuevo-prospect", "z": "commercial", "o": "direccion", "code": "D1", "d": "05/11", "t": "g",
+   "url": "https://app.acme.example/commercial/prospects/", "capturas": ["prospects_1", "prospects_2"],
+   "es": {"n": "Crear un prospect", "h": "Un prospect nuevo se crea desde la lista, en una ventana.",
+          "q": "El botón « Nouveau prospect » abre la ficha en una ventana sobre la lista: razón social, SIREN, contacto y comercial asignado. Al guardar, el prospect aparece arriba de la lista.",
+          "s": ["En « Prospects », pulsa « Nouveau prospect » (o busca uno existente).", "Rellena la ficha y pulsa « Créer la fiche »."],
+          "c": "« qu'on puisse créer un prospect sans quitter la liste »"},
+   "fr": {"n": "Créer un prospect", "h": "Un nouveau prospect se crée depuis la liste, dans une fenêtre.",
+          "q": "Le bouton « Nouveau prospect » ouvre la fiche dans une fenêtre au-dessus de la liste : raison sociale, SIREN, contact et commercial assigné. À l'enregistrement, le prospect apparaît en haut de la liste.",
+          "s": ["Dans « Prospects », cliquez sur « Nouveau prospect » (ou cherchez un prospect existant).", "Remplissez la fiche puis « Créer la fiche »."],
+          "c": "« qu'on puisse créer un prospect sans quitter la liste »"}},
+  {"id": "pipeline", "z": "commercial", "o": "koralya", "d": "12/11", "video": "pipeline",
+   "url": "https://app.acme.example/commercial/pipeline/",
+   "es": {"n": "Nueva affaire desde el pipeline", "h": "El pipeline permite abrir una affaire sin cambiar de página.",
+          "q": "En el pipeline, « Nouvelle affaire » abre la ventana de creación encima del tablero.",
+          "s": ["« Commercial » → « Pipeline » → « Nouvelle affaire »."]},
+   "fr": {"n": "Nouvelle affaire depuis le pipeline", "h": "Le pipeline permet d'ouvrir une affaire sans changer de page.",
+          "q": "Dans le pipeline, « Nouvelle affaire » ouvre la fenêtre de création au-dessus du tableau.",
+          "s": ["« Commercial » → « Pipeline » → « Nouvelle affaire »."]}},
+  {"id": "kpi-movil", "z": "accueil", "o": "ticket", "code": "ACM-012", "d": "14/11", "t": "p",
+   "url": "https://app.acme.example/accueil/", "capturas": ["accueil_movil"],
+   "es": {"n": "Indicadores en el móvil", "h": "En el móvil los indicadores salen uno debajo de otro.",
+          "q": "En el móvil, la página de inicio enseña los indicadores en una columna, legibles sin ampliar.",
+          "s": ["Abre la aplicación en el móvil: los indicadores están arriba."]},
+   "fr": {"n": "Indicateurs sur mobile", "h": "Sur mobile, les indicateurs s'affichent les uns sous les autres.",
+          "q": "Sur mobile, la page d'accueil affiche les indicateurs en colonne, lisibles sans zoomer.",
+          "s": ["Ouvrez l'application sur mobile : les indicateurs sont en haut."]}}
+ ]
+}

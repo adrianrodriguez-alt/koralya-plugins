@@ -1,0 +1,48 @@
+{
+ "tipo": "pruebas",
+ "cliente": {"nombre": "Acme", "logo": "logo_ejemplo.svg"},
+ "plataforma": {"url": "https://app.acme.example", "nombre": {"es": "Aplicación Acme", "fr": "Application Acme"}},
+ "kit_url": "https://app.acme.example/donnees-demo/kit/",
+ "cuentas": [
+  {"n": "admin", "c": "#7c3aed", "u": "admin.demo@acme.example", "m": "Demo-Admin-0000",
+   "nivel": {"es": "Administrador", "fr": "Administrateur"}, "ve": {"es": "Todo, incluidos los datos de demo.", "fr": "Tout, y compris les données de démo."}},
+  {"n": "commercial", "c": "#0052b7", "u": "commercial.demo@acme.example", "m": "Demo-Com-0000",
+   "nivel": {"es": "Comercial", "fr": "Commercial"}, "ve": {"es": "Prospects, devis y pipeline.", "fr": "Prospects, devis et pipeline."}}
+ ],
+ "textos": {
+  "es": {"sur": "Aplicación Acme", "titre": "Cómo probar los prospects", "quoi": "Alta de prospect e inicio en el móvil", "date": "Con los datos de prueba · 16/11/2026",
+         "prep": "<b>Todo está preparado</b>: los datos de prueba están cargados. Cada paso dice con qué cuenta hacerlo. Los enlaces del kit funcionan con la sesión de la aplicación abierta en el mismo navegador:",
+         "finT": "Al terminar", "fin": "Con la cuenta Administrador, « Données de démo » → « Effacer ». Borra los datos de prueba sin tocar los reales.",
+         "pied": "Capturas de producción, hechas el 16/11/2026 con estos mismos datos de prueba."},
+  "fr": {"sur": "Application Acme", "titre": "Comment tester les prospects", "quoi": "Création de prospect et accueil sur mobile", "date": "Avec les données de test · 16/11/2026",
+         "prep": "<b>Tout est prêt</b> : les données de test sont chargées. Chaque étape indique avec quel compte la faire. Les liens du kit fonctionnent avec la session de l'application ouverte dans le même navigateur :",
+         "finT": "À la fin", "fin": "Avec le compte Administrateur, « Données de démo » → « Effacer ». Cela retire les données de test sans toucher aux données réelles.",
+         "pied": "Captures de production, prises le 16/11/2026 avec ces mêmes données de test."}
+ },
+ "contenido": {
+  "es": {"kit": [["kit-demo.zip", "Todo el kit (.zip)"]],
+   "sections": [
+    {"t": "1. Crear un prospect", "s": "cuenta Comercial · ordenador", "fichas": [
+     {"id": "prospect", "n": "Dar de alta un prospect", "cuenta": "commercial", "disp": "Ordenador",
+      "q": "El comercial crea un prospect desde la lista, en una ventana, sin cambiar de página.",
+      "kit": [["ficha_ejemplo.pdf", "ficha_ejemplo.pdf"]],
+      "p": [["« Prospects » → « Nouveau prospect ».", "prospects_1"], ["Rellena la ficha y pulsa « Créer la fiche ».", "prospects_2"], ["El prospect aparece arriba de la lista.", ""]]}]},
+    {"t": "2. Inicio en el móvil", "s": "cuenta Comercial · móvil", "fichas": [
+     {"id": "movil", "n": "Ver los indicadores en el móvil", "cuenta": "commercial", "disp": "Móvil",
+      "q": "En el móvil, la página de inicio enseña los indicadores en una columna.",
+      "p": [["Abre la aplicación en el móvil: los indicadores están arriba.", "accueil_movil"]]}]}
+   ]},
+  "fr": {"kit": [["kit-demo.zip", "Tout le kit (.zip)"]],
+   "sections": [
+    {"t": "1. Créer un prospect", "s": "compte Commercial · ordinateur", "fichas": [
+     {"id": "prospect", "n": "Créer un prospect", "cuenta": "commercial", "disp": "Ordinateur",
+      "q": "Le commercial crée un prospect depuis la liste, dans une fenêtre, sans changer de page.",
+      "kit": [["ficha_ejemplo.pdf", "ficha_ejemplo.pdf"]],
+      "p": [["« Prospects » → « Nouveau prospect ».", "prospects_1"], ["Remplissez la fiche puis « Créer la fiche ».", "prospects_2"], ["Le prospect apparaît en haut de la liste.", ""]]}]},
+    {"t": "2. Accueil sur mobile", "s": "compte Commercial · mobile", "fichas": [
+     {"id": "movil", "n": "Voir les indicateurs sur mobile", "cuenta": "commercial", "disp": "Téléphone",
+      "q": "Sur mobile, la page d'accueil affiche les indicateurs en colonne.",
+      "p": [["Ouvrez l'application sur mobile : les indicateurs sont en haut.", "accueil_movil"]]}]}
+   ]}
+ }
+}

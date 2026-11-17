@@ -5,12 +5,14 @@ Marketplace interno del equipo de Koralya / HeraHub: skills y plugins de Claude 
 | Plugin | Qué hace |
 |---|---|
 | [`demo-cliente`](plugins/demo-cliente/) | Prepara la demo inicial de un cliente a partir de su CDC: recoge y traduce los documentos, resume el proyecto y construye un back-office Django + JS con la marca del cliente. |
+| [`preparar-reunion`](plugins/preparar-reunion/) | Prepara una reunión con el cliente: guía visual en castellano y francés con capturas de producción marcadas. Novedades desde la última reunión o guía de pruebas paso a paso. |
 
 ## Instalar
 Dentro de Claude Code:
 ```
 /plugin marketplace add adrianrodriguez-alt/koralya-plugins
 /plugin install demo-cliente@koralya
+/plugin install preparar-reunion@koralya
 ```
 Abre una conversación nueva y ya está disponible. Para ver todos los plugins del marketplace, escribe `/plugin`.
 

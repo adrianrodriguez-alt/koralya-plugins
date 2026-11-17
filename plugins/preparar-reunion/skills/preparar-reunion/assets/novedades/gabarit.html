@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>__TITULO__</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700;800&display=swap">
+<style>
+/*__ESTILOS__*/
+</style>
+</head>
+<body>
+<div class="feuille">
+  <header class="couv">
+    <div>
+      <img src="__LOGO__" alt="__CLIENTE__">
+      <div class="st" data-i="sur"></div>
+      <h1 data-i="titre"></h1>
+    </div>
+    <div class="meta">
+      <div class="langue" role="group" aria-label="Langue / Idioma"><button type="button" data-l="es">ES</button><button type="button" data-l="fr">FR</button></div>
+      <div data-i="pour"></div><div data-i="par"></div>
+    </div>
+  </header>
+  <section class="acces" id="acces"></section>
+  <div class="cifras" id="cifras"></div>
+  <div class="intro"><p id="intro"></p></div>
+  <section id="indice"></section>
+
+  <div class="outils">
+    <label class="recherche"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="q" type="search" autocomplete="off"></label>
+    <span id="filtres" style="display:contents"></span>
+    <span class="compte" id="compte"></span>
+  </div>
+  <main id="fiches"></main>
+  <p class="vide" id="vide" hidden></p>
+  <footer data-i="pied"></footer>
+</div>
+<div id="tip" role="tooltip"></div>
+<div class="zoom" id="zoom" hidden role="dialog" aria-modal="true"><div class="z-haut"></div><button type="button" class="fermer" aria-label="×">×</button><button type="button" class="nav prec" aria-label="‹">‹</button><div class="z-img"></div><div class="z-txt"></div><button type="button" class="nav suiv" aria-label="›">›</button></div>
+
+<script>
+// Datos de la guía (los escribe construir_guia.py; la plantilla no contiene nada de ningún cliente).
+const CFG = /*__CFG__*/null;
+const ZONES = CFG.zonas, ITEMS = CFG.items, ORIGS = CFG.origenes, ACCES = CFG.accesos || [];
+// CAPT[id de mejora] = lista de capturas en orden (cada una con img, b = recuadros en %, w, r)
+const CAPT = {}; ITEMS.forEach((i) => (CAPT[i.id] = (i.capturas || []).map((c) => CFG.capt[c]).filter(Boolean)));
+const UI = {
+  es: { c: ["mejoras en este documento", "peticiones de la reunión hechas", "tickets resueltos", "capturas y vídeos de producción"],
+    intro: 'Cada ficha dice <b>qué cambia</b>, <b>cómo se usa</b> paso a paso y trae su <b>enlace directo</b>. Las capturas son de producción, con lo que hay que mirar o pulsar marcado así: <span class="leyenda"><i>1</i>dónde mirar o pulsar</span>. Pulsa un paso (o su número bajo la captura) para ver la captura siguiente.',
+    indice: "Índice", indice_s: "pasa el ratón por una burbuja para ver qué es; púlsala para ir a su ficha",
+    q: "Buscar…", n: "{a} de {b} mejoras", vide: "Ninguna mejora coincide con la búsqueda.",
+    pasos: "Dónde pulsar", dit: "Lo que se pidió", abrir: "Abrir en la aplicación", video: "Vídeo", paso: "Paso",
+    accesos: "Accesos para probar", ouvrir: "Abrir ↗", copie: "Copiado" },
+  fr: { c: ["améliorations dans ce document", "demandes de la réunion réalisées", "tickets résolus", "captures et vidéos de production"],
+    intro: 'Chaque fiche dit <b>ce qui change</b>, <b>comment s\'en servir</b> pas à pas, avec son <b>lien direct</b>. Les captures viennent de la production, avec ce qu\'il faut regarder ou cliquer signalé ainsi : <span class="leyenda"><i>1</i>où regarder ou cliquer</span>. Cliquez sur une étape (ou son numéro sous la capture) pour voir la capture suivante.',
+    indice: "Sommaire", indice_s: "survolez une bulle pour voir de quoi il s'agit ; cliquez pour aller à sa fiche",
+    q: "Rechercher…", n: "{a} sur {b} améliorations", vide: "Aucune amélioration ne correspond à la recherche.",
+    pasos: "Où cliquer", dit: "La demande", abrir: "Ouvrir dans l'application", video: "Vidéo", paso: "Étape",
+    accesos: "Accès pour tester", ouvrir: "Ouvrir ↗", copie: "Copié" },
+};
+const T = { es: Object.assign({}, UI.es, CFG.textos.es), fr: Object.assign({}, UI.fr, CFG.textos.fr) };
+const NUM = {}; ITEMS.forEach((i, k) => (NUM[i.id] = k + 1));
+const ETAT = {};
+let L = CFG.idioma || "es"; const actifs = new Set();
+try { const s = localStorage.getItem("bulles-langue"); if (s === "fr" || s === "es") L = s; } catch (e) {}
+if (CFG.solo_idioma) L = CFG.solo_idioma;
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])).replace(/« /g, "«&nbsp;").replace(/ »/g, "&nbsp;»");
+const norm = (s) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+const tr = (v) => (v && typeof v === "object" && !Array.isArray(v) ? v[L] : v) || "";
+const orig = (o) => ORIGS.find((x) => x.id === o) || { id: o, color: "var(--gris)", es: o, fr: o };
+const coul = (o) => orig(o).color;
+const PLAY = '<svg viewBox="0 0 10 12"><path d="M0 0l10 6-10 6z"/></svg>';
+const etapes = (i) => i[L].s || [];
+const court = (s) => { const t = s.split(/[:.;]/)[0].trim(); return t.length > 46 ? t.slice(0, 44) + "…" : t; };
+const vid = (i) => i.video ? (/\.\w+$/.test(i.video) ? i.video : i.video + ".mp4") : "";
+
+function rendreAcces() {
+  const a = T[L], cp = (v) => `<button type="button" class="copie" data-copie="${esc(v)}">${esc(v)}</button>`;
+  $("#acces").hidden = !ACCES.length;
+  if (!ACCES.length) return;
+  $("#acces").innerHTML = `<h3>${a.accesos}</h3>` + ACCES.map((g) => `<div class="carte${ACCES.length === 1 ? " plein" : ""}"><div class="t"><b>${esc(tr(g.nombre))}</b>${g.url ? `<a href="${g.url}" target="_blank" rel="noopener">${a.ouvrir}</a>` : ""}</div>
+      ${g.filas.map((x) => `<div class="ligne-acces${x.ve ? "" : " simple"}"><span class="niv" style="--c:${x.c}">${esc(tr(x.nivel))}</span>${cp(x.u)}${cp(x.m)}${x.ve ? `<span class="voit">${esc(tr(x.ve))}</span>` : ""}</div>`).join("")}</div>`).join("");
+}
+function construire() {
+  rendreAcces();
+  document.documentElement.lang = L;
+  document.querySelectorAll("[data-i]").forEach((e) => (e.textContent = T[L][e.dataset.i] || ""));
+  document.querySelectorAll(".langue button").forEach((b) => b.setAttribute("aria-pressed", b.dataset.l === L));
+  $("#intro").innerHTML = T[L].intro; $("#q").placeholder = T[L].q;
+  const nCaps = Object.values(CAPT).reduce((a, v) => a + v.length, 0), nVid = ITEMS.filter((i) => i.video).length;
+  const nReu = ITEMS.filter((i) => i.reunion || orig(i.o).reunion).length, nTk = ITEMS.filter((i) => orig(i.o).ticket).length;
+  $("#cifras").innerHTML = [ITEMS.length, nReu, nTk, nCaps + nVid].map((n, k) => `<div class="cifra"><b>${n}</b><span>${T[L].c[k]}</span></div>`).join("");
+  $("#indice").hidden = CFG.indice === false;
+  $("#indice").innerHTML = `<h3 class="t">${T[L].indice}<small>${T[L].indice_s}</small></h3><div class="index">${ZONES.map((z) => {
+    const its = ITEMS.filter((i) => i.z === z.id); if (!its.length) return "";
+    return `<div class="groupe"><h4>${esc(z[L][0])}<small>${esc(z[L][1] || "")}</small></h4><div class="bulles">${its.map((i) =>
+      `<button type="button" class="bulle${i.t ? " " + i.t : ""}" data-id="${i.id}" style="--c:${coul(i.o)}"><span class="n">${esc(i.code || NUM[i.id])}</span><span class="nom">${esc(i[L].n)}</span>${i.video ? `<span class="play">${PLAY}</span>` : ""}</button>`).join("")}</div></div>`;
+  }).join("")}</div>`;
+  $("#filtres").innerHTML = ORIGS.map((o) => `<button type="button" class="filtre" data-o="${o.id}" style="--c:${o.color}" aria-pressed="${actifs.has(o.id)}"><i></i>${esc(tr(o))}</button>`).join("");
+  $("#fiches").innerHTML = ZONES.map((z, zi) => `<section data-z="${z.id}"><h2 class="sec">${zi + 1}. ${esc(z[L][0])}<small>${esc(z[L][1] || "")}</small></h2>${ITEMS.filter((i) => i.z === z.id).map(fiche).join("")}</section>`).join("");
+  ITEMS.forEach((i) => montrer(i.id, ETAT[i.id] ?? (CAPT[i.id].length ? 0 : "video")));
+  filtrer();
+}
+
+function fiche(i) {
+  const t = i[L], et = etapes(i), caps = CAPT[i.id];
+  const chips = `<span class="chip" style="--c:${coul(i.o)}">${esc(tr(orig(i.o)))}${i.code ? " · " + esc(i.code) : ""}</span>${i.d ? `<span class="chip g">${esc(i.d)}</span>` : ""}`;
+  return `<article class="ficha" id="${i.id}"><div class="cab"><span class="num">${NUM[i.id]}</span><h4>${esc(t.n)}</h4>${chips}</div>
+    <div class="col">
+      <p class="nuevo">${esc(t.q)}</p>
+      ${et.length ? `<div><div class="lbl">${T[L].pasos}</div><ol class="pasos">${et.map((s, n) => `<li data-p="${n < caps.length ? n : ""}">${esc(s)}</li>`).join("")}</ol></div>` : ""}
+      ${t.c ? `<div class="ejemplo">${T[L].dit} : <i>${esc(t.c)}</i></div>` : ""}
+      ${i.url ? `<div class="enl"><a href="${i.url}" target="_blank" rel="noopener">${esc(t.abrir || T[L].abrir)} ↗</a></div>` : ""}
+    </div>
+    <figure class="visu" style="margin:0"><div class="cadre-vue"></div>
+      <div class="onglets">${caps.length > 1 ? caps.map((_, n) => `<button type="button" data-p="${n}">${n + 1}</button>`).join("") : ""}${i.video ? `<button type="button" class="vid" data-p="video">▶ ${T[L].video}</button>` : ""}</div>
+      <figcaption></figcaption></figure></article>`;
+}
+
+function montrer(id, p) {
+  const el = document.getElementById(id); if (!el) return;
+  const i = ITEMS.find((x) => x.id === id), caps = CAPT[id], et = etapes(i), vue = el.querySelector(".cadre-vue");
+  ETAT[id] = p;
+  el.querySelectorAll(".onglets button").forEach((b) => b.setAttribute("aria-pressed", b.dataset.p === String(p)));
+  el.querySelectorAll(".pasos li").forEach((l) => l.classList.toggle("actif", l.dataset.p === String(p)));
+  const cap = el.querySelector("figcaption");
+  if (p === "video") {
+    if (!i.video) { vue.innerHTML = ""; cap.innerHTML = ""; return; }
+    const v = vid(i), poster = "m/" + v.replace(/\.\w+$/, "") + "_poster.webp";
+    vue.innerHTML = `<video src="m/${v}" poster="${poster}" controls muted loop playsinline preload="none" aria-label="${T[L].video}"></video>`; cap.innerHTML = ""; return;
+  }
+  const s = caps[p]; if (!s) return;
+  const txt = et[p] || "";
+  vue.innerHTML = `<a class="ecran${s.w < 600 ? " mobile" : ""}" href="p/${s.img}.webp"><img src="p/${s.img}.webp" alt="${esc(i[L].n)} · ${p + 1}" loading="lazy" style="aspect-ratio:${s.r}">
+    ${s.b.map(([x, y, w, h], n) => `<div class="cadre${y < 9 ? " bas" : ""}${x > 62 ? " droite" : ""}" style="left:${x}%;top:${y}%;width:${w}%;height:${h}%">${n === 0 ? `<span class="leyenda"><i>${p + 1}</i><span class="tx">${esc(court(txt))}</span></span>` : ""}</div>`).join("")}</a>`;
+  cap.innerHTML = caps.length ? `<b>${T[L].paso} ${p + 1}/${caps.length}</b> · ${esc(txt)}` : "";
+}
+
+function filtrer() {
+  const mots = norm($("#q").value.trim()).split(/\s+/).filter(Boolean); let n = 0;
+  ITEMS.forEach((i) => {
+    const txt = norm([i.es.n, i.es.h, i.es.q, i.fr.n, i.fr.h, i.fr.q, i.code || ""].join(" "));
+    const ok = (!actifs.size || actifs.has(i.o)) && mots.every((m) => txt.includes(m));
+    document.getElementById(i.id).hidden = !ok; if (ok) n++;
+  });
+  document.querySelectorAll("#fiches section").forEach((g) => (g.hidden = !g.querySelector(".ficha:not([hidden])")));
+  $("#compte").textContent = T[L].n.replace("{a}", n).replace("{b}", ITEMS.length);
+  const v = $("#vide"); v.hidden = n > 0; v.textContent = T[L].vide;
+}
+
+function aller(id) {
+  const el = document.getElementById(id); if (!el) return;
+  if (el.hidden) { actifs.clear(); $("#q").value = ""; document.querySelectorAll(".filtre").forEach((f) => f.setAttribute("aria-pressed", "false")); filtrer(); }
+  el.scrollIntoView({ block: "start" });
+  el.classList.add("vise"); setTimeout(() => el.classList.remove("vise"), 1600);
+  if (location.hash !== "#" + id) history.replaceState(null, "", "#" + id);
+}
+
+// Imagen ampliada dentro de la página. Las flechas se quedan en la misma ficha (regla de Adrián).
+let Z = null;
+function listeZoom() { return Z ? CAPT[Z[0]].map((_, p) => [Z[0], p]) : []; }
+function fermerZoom() { const z = $("#zoom"); z.hidden = true; z.querySelector(".z-img").innerHTML = ""; document.body.style.overflow = ""; if (Z) { const el = document.getElementById(Z[0]); el && el.scrollIntoView({ block: "nearest" }); } Z = null; }
+function afficherZoom(id, p) {
+  const z = $("#zoom"), el = document.getElementById(id); if (!el) return;
+  Z = [id, p]; montrer(id, p);
+  const ec = el.querySelector(".cadre-vue .ecran"); if (!ec) return;
+  const c = ec.cloneNode(true); c.removeAttribute("href"); c.classList.remove("mobile"); c.querySelector("img").loading = "eager";
+  z.querySelector(".z-img").replaceChildren(c);
+  const i = ITEMS.find((x) => x.id === id), caps = CAPT[id], l = listeZoom(), k = l.findIndex(([a, b]) => a === id && b === p);
+  z.querySelector(".z-haut").innerHTML = `${esc(i[L].n)}<span>${T[L].paso} ${p + 1}/${caps.length}</span>`;
+  z.querySelector(".z-txt").innerHTML = esc(etapes(i)[p] || "");
+  z.querySelector(".prec").disabled = k <= 0; z.querySelector(".suiv").disabled = k < 0 || k >= l.length - 1; z.querySelector(".prec").hidden = z.querySelector(".suiv").hidden = l.length < 2;
+}
+function bougerZoom(d) { if (!Z) return; const l = listeZoom(), k = l.findIndex(([a, b]) => a === Z[0] && b === Z[1]), n = l[k + d]; if (n) afficherZoom(n[0], n[1]); }
+function ouvrirZoom(ec) { const f = ec.closest(".ficha"); const p = ETAT[f.id]; afficherZoom(f.id, typeof p === "number" ? p : 0); $("#zoom").hidden = false; document.body.style.overflow = "hidden"; $("#zoom .fermer").focus(); }
+document.addEventListener("keydown", (e) => {
+  if ($("#zoom").hidden) return;
+  if (e.key === "Escape") fermerZoom(); else if (e.key === "ArrowRight") { e.preventDefault(); bougerZoom(1); } else if (e.key === "ArrowLeft") { e.preventDefault(); bougerZoom(-1); }
+});
+let xTouche = null;
+$("#zoom").addEventListener("touchstart", (e) => { xTouche = e.touches[0].clientX; }, { passive: true });
+$("#zoom").addEventListener("touchend", (e) => { if (xTouche === null) return; const dx = e.changedTouches[0].clientX - xTouche; xTouche = null; if (Math.abs(dx) > 50) bougerZoom(dx < 0 ? 1 : -1); });
+document.addEventListener("click", (e) => {
+  const k = e.target.closest(".copie");
+  if (k) { const v = k.dataset.copie, fin = () => { k.classList.add("ok"); k.textContent = T[L].copie; setTimeout(() => { k.classList.remove("ok"); k.textContent = v; }, 1100); };
+    try { navigator.clipboard.writeText(v).then(fin, () => { const r = document.createRange(); r.selectNodeContents(k); getSelection().removeAllRanges(); getSelection().addRange(r); }); } catch (er) {} return; }
+  if (e.target.closest("#zoom")) {
+    if (e.target.closest(".prec")) bougerZoom(-1); else if (e.target.closest(".suiv")) bougerZoom(1);
+    else if (e.target.closest(".fermer") || !e.target.closest(".ecran, .z-txt, .z-haut")) fermerZoom();
+    return;
+  }
+  const ec = e.target.closest(".cadre-vue .ecran"); if (ec) { e.preventDefault(); ouvrirZoom(ec); return; }
+  const l = e.target.closest(".langue button");
+  if (l) { L = l.dataset.l; try { localStorage.setItem("bulles-langue", L); } catch (er) {} construire(); return; }
+  const f = e.target.closest(".filtre");
+  if (f) { const o = f.dataset.o; actifs.has(o) ? actifs.delete(o) : actifs.add(o); f.setAttribute("aria-pressed", actifs.has(o)); filtrer(); return; }
+  const b = e.target.closest(".bulle"); if (b) { masquerTip(); aller(b.dataset.id); return; }
+  const o = e.target.closest(".onglets button, .pasos li");
+  if (o && o.dataset.p !== "" && o.dataset.p !== undefined) { const id = o.closest(".ficha").id; montrer(id, o.dataset.p === "video" ? "video" : +o.dataset.p); }
+});
+$("#q").addEventListener("input", filtrer);
+const tip = $("#tip");
+function masquerTip() { tip.classList.remove("on"); }
+function montrerTip(b) {
+  const i = ITEMS.find((x) => x.id === b.dataset.id); if (!i) return;
+  tip.innerHTML = `<b>${esc(tr(orig(i.o)))}${i.code ? " · " + esc(i.code) : ""}${i.d ? " · " + esc(i.d) : ""}</b>${esc(i[L].h || "")}`;
+  const r = b.getBoundingClientRect(); tip.classList.add("on");
+  const w = tip.offsetWidth, h = tip.offsetHeight;
+  const x = Math.min(Math.max(8, r.left + r.width / 2 - w / 2), innerWidth - w - 8); let y = r.top - h - 8; if (y < 8) y = r.bottom + 8;
+  tip.style.left = x + "px"; tip.style.top = y + "px";
+}
+document.addEventListener("pointerover", (e) => { const b = e.target.closest?.(".bulle"); if (b && e.pointerType !== "touch") montrerTip(b); });
+document.addEventListener("pointerout", (e) => { if (e.target.closest?.(".bulle")) masquerTip(); });
+document.addEventListener("focusin", (e) => { const b = e.target.closest?.(".bulle"); b ? montrerTip(b) : masquerTip(); });
+addEventListener("scroll", masquerTip, { passive: true });
+if (CFG.solo_idioma) document.querySelector(".langue").hidden = true;
+construire();
+if (location.hash.length > 1 && document.getElementById(location.hash.slice(1))) { setTimeout(() => aller(location.hash.slice(1)), 60); addEventListener("load", () => aller(location.hash.slice(1))); }
+addEventListener("hashchange", () => { const h = location.hash.slice(1); if (h) aller(h); });
+</script>
+</body>
+</html>

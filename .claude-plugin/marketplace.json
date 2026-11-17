@@ -11,6 +11,11 @@
       "name": "demo-cliente",
       "source": "./plugins/demo-cliente",
       "description": "Demo de cliente Django a partir del cahier des charges: documentos, traducciones, resumen y back-office con la marca del cliente."
+    },
+    {
+      "name": "preparar-reunion",
+      "source": "./plugins/preparar-reunion",
+      "description": "Prepara la reunión con el cliente: guía visual ES/FR con capturas de producción marcadas (novedades desde la última reunión o guía de pruebas)."
     }
   ]
 }
