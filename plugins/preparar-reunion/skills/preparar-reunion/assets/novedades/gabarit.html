@@ -92,7 +92,7 @@ function construire() {
   const nCaps = Object.values(CAPT).reduce((a, v) => a + v.length, 0), nVid = ITEMS.filter((i) => i.video).length;
   const nReu = ITEMS.filter((i) => i.reunion || orig(i.o).reunion).length, nTk = ITEMS.filter((i) => orig(i.o).ticket).length;
   $("#cifras").innerHTML = [ITEMS.length, nReu, nTk, nCaps + nVid].map((n, k) => `<div class="cifra"><b>${n}</b><span>${T[L].c[k]}</span></div>`).join("");
-  $("#indice").hidden = CFG.indice === false;
+  $("#indice").hidden = CFG.indice !== true;  // índice en burbujas: solo si se pide
   $("#indice").innerHTML = `<h3 class="t">${T[L].indice}<small>${T[L].indice_s}</small></h3><div class="index">${ZONES.map((z) => {
     const its = ITEMS.filter((i) => i.z === z.id); if (!its.length) return "";
     return `<div class="groupe"><h4>${esc(z[L][0])}<small>${esc(z[L][1] || "")}</small></h4><div class="bulles">${its.map((i) =>

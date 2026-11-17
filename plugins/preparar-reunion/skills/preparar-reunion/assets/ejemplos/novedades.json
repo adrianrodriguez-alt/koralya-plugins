@@ -2,7 +2,7 @@
  "tipo": "novedades",
  "cliente": {"nombre": "Acme", "logo": "logo_ejemplo.svg"},
  "color": "#0052b7",
- "indice": true,
+ "indice": false,
  "accesos": [
   {"nombre": {"es": "Aplicación", "fr": "Application"}, "url": "https://app.acme.example",
    "filas": [

@@ -22,7 +22,7 @@ Las dos plantillas (`assets/novedades/gabarit.html` y `assets/guia_pruebas/gabar
    - tickets resueltos: orígenes con `"ticket": true`. Si no hay tickets, usa esta cifra para otra fuente (por ejemplo el documento de quejas del cliente: origen con `"ticket": true`) y cambia su texto en `textos.es.c` / `textos.fr.c` (lista de 4 textos, el 3.º es este);
    - capturas + vídeos.
 4. **Intro** con la leyenda roja « ① dónde mirar o pulsar ».
-5. **Índice en burbujas**: una fila por zona, una burbuja por mejora, del color de su origen, con su código o número y ▶ si tiene vídeo. Al pasar el ratón se ve la frase `h`; al pulsar, va a la ficha. Con `"indice": false` se quita.
+5. **Índice en burbujas** (opcional, **desactivado por defecto**; solo con `"indice": true` si el usuario lo pide): una fila por zona, una burbuja por mejora, del color de su origen, con su código o número y ▶ si tiene vídeo. Al pasar el ratón se ve la frase `h`; al pulsar, va a la ficha.
 6. **Buscador + filtros por origen** + « N de M mejoras ».
 7. **Bandas oscuras por zona** (« 1. Vista 3D » + subtítulo), en el orden en que se usa la aplicación, no por fecha.
 8. **Fichas.** La cabecera lleva número, título, pastilla de origen con su código (« Ana · A1 », « Tickets · ACM-046 ») y fecha.

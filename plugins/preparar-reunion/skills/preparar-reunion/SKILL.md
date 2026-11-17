@@ -36,7 +36,7 @@ Si ves `${CLAUDE_SKILL_DIR}` sin resolver (has leído este archivo a mano en vez
 
   Mete solo lo que el cliente **ve o usa** y **nunca importes de dinero de Koralya**.
 - **Guía de pruebas:** reúne los recorridos pedidos, una cuenta por nivel, los datos de prueba (identificables y que se puedan borrar) y el kit de ficheros. Si la aplicación no tiene datos de prueba que se puedan borrar, propónlo antes de capturar nada. Excepción: una **demo sin persistencia** (nada se guarda, cada recarga vuelve al inicio). Ahí no hace falta proponer nada; adapta « Todo está preparado » y « Al terminar » (references/diseno.md § Pruebas).
-- Enseña la lista y **espera su visto bueno**:
+- Enseña la lista y **espera su visto bueno**. En novedades, añade al final una sola pregunta opcional: « ¿Le pongo un índice en burbujas arriba? (por defecto, no) ». Sin respuesta clara, va sin índice (`"indice": false`): a Adrián no le suelen gustar.
   - Novedades: zona → título, una línea de « qué cambia », origen y fecha.
   - Pruebas: sección → recorrido, con cuenta y dispositivo.
 
