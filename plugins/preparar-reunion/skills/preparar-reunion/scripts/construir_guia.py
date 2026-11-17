@@ -16,6 +16,7 @@ import argparse
 import base64
 import json
 import mimetypes
+import re
 import shutil
 import subprocess
 import sys
@@ -81,6 +82,8 @@ def capturas_pruebas(cfg):
                 err(f"ficha {fa['id']}: ficheros del kit distintos entre ES y FR")
             if fa.get("cuenta") and fa["cuenta"] not in {x["n"] for x in cfg.get("cuentas", [])} and cfg.get("cuentas"):
                 err(f"ficha {fa['id']}: cuenta « {fa['cuenta']} » no está en cuentas")
+            if fa.get("disp") and fa.get("disp") == fb.get("disp") and fa["disp"].lower() not in ("tablet",):
+                avi(f"ficha {fa['id']}: « {fa['disp']} » igual en ES y FR: ¿falta traducir el dispositivo? (Ordenador/Ordinateur, Móvil/Téléphone)")
             for lang, f in (("es", fa), ("fr", fb)):
                 if len(f.get("q", "")) > 420:
                     avi(f"ficha {f['id']} ({lang}): párrafo de {len(f['q'])} caracteres; regla: poco texto")
@@ -91,6 +94,14 @@ def capturas_pruebas(cfg):
     if [k[0] for k in c["es"].get("kit", [])] != [k[0] for k in c["fr"].get("kit", [])]:
         err("kit general distinto entre ES y FR")
     return usados
+
+
+def comprobar_cuentas(filas):
+    for x in filas:
+        for lang in ("es", "fr"):
+            n = (x.get("nivel") or {}).get(lang, "")
+            if len(n) > 14:
+                avi(f"cuenta {x.get('u')}: nivel « {n} » ({lang}) de {len(n)} caracteres; la pastilla se recorta a partir de ~14")
 
 
 def capturas_novedades(cfg):
@@ -144,6 +155,9 @@ def main():
     if tipo not in ("novedades", "pruebas"):
         sys.exit("tipo debe ser 'novedades' o 'pruebas'")
     comprobar_textos(cfg)
+    if re.search(r"https?://(127\.0\.0\.1|localhost|0\.0\.0\.0)", json.dumps(cfg)):
+        avi("la guía enlaza a una URL local (127.0.0.1/localhost): quien la lea no podrá abrirla; usa la URL de producción")
+    comprobar_cuentas(cfg.get("cuentas", []) + [f for g in cfg.get("accesos", []) for f in g.get("filas", [])])
     usados = capturas_pruebas(cfg) if tipo == "pruebas" else capturas_novedades(cfg)
 
     cap_dir = Path(a.capturas).resolve() if a.capturas else None
@@ -193,6 +207,8 @@ def main():
                 else:
                     dst = out / "m" / src.name
                     shutil.copyfile(src, dst)
+                    if src.suffix == ".webm":
+                        avi(f"vídeo {src.name}: queda en .webm (no hay ffmpeg en el PATH). Se ve en Chrome, Edge y Firefox; en Safari antiguo puede fallar")
                 for i in cfg["items"]:
                     if i.get("video") == v:
                         i["video"] = dst.name
@@ -220,7 +236,9 @@ def main():
     plantilla = (ASSETS / ("novedades" if tipo == "novedades" else "guia_pruebas") / "gabarit.html").read_text(encoding="utf-8")
     datos = {k: v for k, v in cfg.items() if k not in ("cliente",)}
     datos_js = json.dumps(datos, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")
-    titulo = cfg["textos"].get(a.solo_idioma or cfg.get("idioma", "es"), {}).get("titre", cliente.get("nombre", "Guía"))
+    titulo = cfg["textos"].get(a.solo_idioma or cfg.get("idioma", "es"), {}).get("titre", "Guía")
+    if cliente.get("nombre") and cliente["nombre"].lower() not in titulo.lower():
+        titulo = f"{cliente['nombre']} · {titulo}"  # el título de la pestaña / del artifact identifica al cliente
     html = (plantilla.replace("/*__ESTILOS__*/", css)
             .replace("/*__CFG__*/null", datos_js)
             .replace("__LOGO__", logo)

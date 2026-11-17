@@ -8,7 +8,7 @@ Las herramientas del conector Koralya pueden estar diferidas: cárgalas con Tool
 - Usa `get_recent_meetings(cliente)` y localiza la última reunión con el cliente (no las internas). Si el usuario da una fecha (« desde el 21/10 »), esa fecha manda.
 - Lee `get_meeting_transcript(…)` de esa reunión. Sirve para dos cosas:
   - **Fecha de corte**: todo lo hecho después de la reunión.
-  - **Frases textuales** de lo que pidió cada persona. Van en la ficha como « Lo que se pidió » (`c`), entre « », en el idioma en que se dijeron, cortas, con […] si se recortan.
+  - **Frases textuales** de lo que pidió cada persona. Van en la ficha como « Lo que se pidió » (`c`), entre « », en el idioma en que se dijeron, cortas, con […] si se recortan. **Literales de verdad**: no corrijas palabras aunque la transcripción automática se equivoque (« celle-ci » por « Sellsy »). Si la frase no se entiende sin corregirla, elige otra o no pongas cita.
 - Si la reunión dio lugar a un roadmap, `get_herahub_meeting` puede traer el reporte IA con la lista de peticiones.
 
 ## 2. Las notas de reuniones del proyecto
@@ -18,11 +18,19 @@ En el repositorio del proyecto:
 
 Cruza cada petición con lo hecho. Las pedidas y hechas son las mejoras con origen = la persona que las pidió.
 
+### Si no hay notas de reunión
+Es habitual en proyectos nuevos. Entonces:
+- Las peticiones salen de la **transcripción** de la reunión y de los **documentos del cliente posteriores a ella** (un correo o un documento de quejas, como « Point et questions par Loïc »). Lee también las traducciones de `documentos/traducciones_es/` si existen.
+- **Numera tú las peticiones** por persona o documento, en orden de aparición (A1, A2… de Ana; L1… del documento de Loïc) y apúntalo en el JSON. Ese número es el `code`.
+- Un documento del cliente que no es ni reunión ni ticket es un **origen** más (« Loïc · 27/09 »), con `"reunion": true` si lo que pide cuenta como petición atendida.
+
 ## 3. Historial y git
 - `contexto/HISTORIAL.md` (o el historial que tenga el proyecto) desde la fecha de corte.
 - `git log --since=<AAAA-MM-DD> --pretty="%ad %s" --date=short` en cada repositorio del cliente (configurador, plataforma…).
 
 De aquí salen las mejoras que no pidió nadie (origen « Koralya ») y los fallos de la demo corregidos (origen « Fallos de la demo »).
+
+**Sin git ni historial**, no inventes fechas: usa la fecha del ticket o del documento que la pidió. Si no hay ninguna, deja `d` vacío y dilo en la lista que presentas al usuario.
 
 ## 4. Tickets cerrados desde la fecha
 - `search_tickets(cliente, kind="client")`; quédate con los resueltos o cerrados después de la fecha de corte. `get_ticket(codigo)` da el detalle.

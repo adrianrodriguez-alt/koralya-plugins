@@ -71,7 +71,7 @@ def main():
             # « Failed to load resource » no dice qué fichero: los 4xx/5xx se registran con su URL (salvo el favicon)
             pg.on("console", lambda m: errs.append(m.text) if m.type == "error" and "Failed to load resource" not in m.text else None)
             pg.on("response", lambda r: errs.append(f"{r.status} {r.url}") if r.status >= 400 and not r.url.endswith("favicon.ico") else None)
-            pg.on("requestfailed", lambda r: errs.append("no carga: " + r.url))
+            pg.on("requestfailed", lambda r: errs.append("no carga: " + r.url) if "ABORTED" not in (r.failure or "") else None)
             pg.add_init_script("try{localStorage.clear()}catch(e){}")
             pg.goto(url, wait_until="networkidle")
             pg.evaluate("() => document.querySelectorAll('img[loading=lazy]').forEach(i => i.loading = 'eager')")
@@ -80,6 +80,10 @@ def main():
             ok(sw <= w, f"{w}px · sin desplazamiento horizontal (scrollWidth {sw})")
             rotas = pg.evaluate("() => [...document.images].filter(i => i.complete && i.naturalWidth === 0).map(i => i.getAttribute('src').slice(0, 60))")
             ok(not rotas, f"{w}px · todas las imágenes cargan" + (f" (rotas: {rotas[:3]})" if rotas else ""))
+            cortadas = pg.evaluate("() => [...document.querySelectorAll('.niv, .chip, .filtre, .leyenda .tx, h2.sec, .ficha h4')].filter(e => e.offsetParent && e.scrollWidth > e.clientWidth + 1 && !e.closest('.cadre')).map(e => e.textContent.trim().slice(0, 30))")
+            ok(not cortadas, f"{w}px · ninguna pastilla ni título recortado" + (f" (recortados: {cortadas[:4]})" if cortadas else ""))
+            logo = pg.evaluate("() => { const i = document.querySelector('.couv img'); return !!i && i.naturalWidth > 0 }")
+            ok(logo, f"{w}px · el logo del cliente se ve")
             n_fichas = pg.locator(".ficha").count()
             ok(n_fichas > 0, f"{w}px · {n_fichas} fichas")
             pg.screenshot(path=str(shots / f"control_{w}.png"), full_page=(w == 1440))
@@ -123,6 +127,16 @@ def main():
                 if w == 390:
                     pg.screenshot(path=str(shots / "control_390_fr.png"))
                 pg.locator(".langue button[data-l=es]").click()
+            if w == 1440:
+                for vb in pg.locator(".onglets .vid").all():
+                    art = vb.locator("xpath=ancestor::article")
+                    fid = art.get_attribute("id")
+                    vb.click()
+                    pg.wait_for_timeout(150)
+                    dur = art.locator("video").evaluate(
+                        "v => new Promise(r => { if (v.readyState >= 1) return r(v.duration); v.preload = 'metadata';"
+                        " v.onloadedmetadata = () => r(v.duration); v.onerror = () => r(-1); v.load(); setTimeout(() => r(-2), 8000) })")
+                    ok(bool(dur) and dur > 0, f"{w}px · el vídeo de « {fid} » carga" + (f" ({dur:.0f} s)" if dur and dur > 0 else ""))
             ok(not errs, f"{w}px · sin errores de consola" + (f": {errs[:3]}" if errs else ""))
             pg.close()
         b.close()

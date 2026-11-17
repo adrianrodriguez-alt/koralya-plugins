@@ -11,6 +11,7 @@ Habla con el usuario en **castellano**. La guía sale en **castellano y francés
 
 **Ruta de la skill:** `${CLAUDE_SKILL_DIR}`. En las referencias, `<skill>` significa esa ruta. Ejecuta los scripts con su ruta completa, porque trabajas en la carpeta del proyecto del cliente:
 `python "<skill>/scripts/construir_guia.py" …`
+Si ves `${CLAUDE_SKILL_DIR}` sin resolver (has leído este archivo a mano en vez de cargar la skill), `<skill>` es la carpeta que contiene este SKILL.md.
 
 **Hazlo, no preguntes de más.** La única validación obligatoria es la lista de fichas (paso 2). Zonas, orden, qué capturar y qué lleva vídeo lo decides tú. Calidad alta: tiene que parecer un documento cuidado, no una página de pruebas.
 
@@ -23,6 +24,8 @@ Habla con el usuario en **castellano**. La guía sale en **castellano y francés
   - si hay datos de prueba que se puedan cargar y borrar;
   - las cuentas por nivel;
   - el logo del cliente (`static/`, la carta gráfica, o un artifact anterior suyo leído con `Artifact read`).
+- **Explora la aplicación** antes de elegir pantallas: `python "<skill>/scripts/capturas_base.py" --explorar guion.json rutas.txt` hace una captura de página completa de cada ruta y marca « ROTA » la que tenga un CSS, JS o página en error.
+- **Si producción está rota** (pantalla sin estilos, error 500, recurso que falta), **no la captures**: para, dile al usuario qué falla y qué fichas afecta. Sigue solo con el resto si te lo confirma. Una captura de una pantalla rota en una guía para el cliente es peor que no tener la ficha.
 
 ## 2. Reúne el contenido y valídalo con el usuario
 - **Novedades:** sigue references/fuentes.md, en este orden:
@@ -32,7 +35,7 @@ Habla con el usuario en **castellano**. La guía sale en **castellano y francés
   4. los tickets cerrados.
 
   Mete solo lo que el cliente **ve o usa** y **nunca importes de dinero de Koralya**.
-- **Guía de pruebas:** reúne los recorridos pedidos, una cuenta por nivel, los datos de prueba (identificables y que se puedan borrar) y el kit de ficheros. Si la aplicación no tiene datos de prueba que se puedan borrar, propónlo antes de capturar nada.
+- **Guía de pruebas:** reúne los recorridos pedidos, una cuenta por nivel, los datos de prueba (identificables y que se puedan borrar) y el kit de ficheros. Si la aplicación no tiene datos de prueba que se puedan borrar, propónlo antes de capturar nada. Excepción: una **demo sin persistencia** (nada se guarda, cada recarga vuelve al inicio). Ahí no hace falta proponer nada; adapta « Todo está preparado » y « Al terminar » (references/diseno.md § Pruebas).
 - Enseña la lista y **espera su visto bueno**:
   - Novedades: zona → título, una línea de « qué cambia », origen y fecha.
   - Pruebas: sección → recorrido, con cuenta y dispositivo.
@@ -69,7 +72,7 @@ Sigue references/capturas.md:
 - **Guía de pruebas:** cada enlace de descarga debe responder 200 con la sesión de **cada** cuenta que lo usa (pruébalo en producción con Playwright o `requests`).
 
 ## 6. Publica y entrega
-- Carga la skill `artifact-design`, o haz `quickstart` con `intent: "other"`.
+- **La plantilla manda.** Es un documento claro, como un PDF, con un solo tema; no la adaptes al contrato de `artifact-design` (modo oscuro, tokens…) ni cambies su CSS. Si la herramienta Artifact exige cargar `artifact-design` antes de publicar, cárgala, pero publica `site/index.html` tal cual.
 - Publica `site/index.html` con `files` (todas las `p/*.webp` y `m/*`) e `icon`: `checklist` para pruebas, `sparkles` para novedades.
 - Para actualizar la guía después, vuelve a publicar **el mismo `file_path`**: el enlace no cambia.
 - Entrega en pocas líneas:

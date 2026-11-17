@@ -19,7 +19,7 @@ Las dos plantillas (`assets/novedades/gabarit.html` y `assets/guia_pruebas/gabar
 3. **Cifras**, cuatro y calculadas solas:
    - mejoras;
    - peticiones de la reunión hechas: orígenes con `"reunion": true` y mejoras con `"reunion": true`;
-   - tickets resueltos: orígenes con `"ticket": true`;
+   - tickets resueltos: orígenes con `"ticket": true`. Si no hay tickets, usa esta cifra para otra fuente (por ejemplo el documento de quejas del cliente: origen con `"ticket": true`) y cambia su texto en `textos.es.c` / `textos.fr.c` (lista de 4 textos, el 3.º es este);
    - capturas + vídeos.
 4. **Intro** con la leyenda roja « ① dónde mirar o pulsar ».
 5. **Índice en burbujas**: una fila por zona, una burbuja por mejora, del color de su origen, con su código o número y ▶ si tiene vídeo. Al pasar el ratón se ve la frase `h`; al pulsar, va a la ficha. Con `"indice": false` se quita.
@@ -59,6 +59,7 @@ Las dos plantillas (`assets/novedades/gabarit.html` y `assets/guia_pruebas/gabar
   - nada de cajas rosas ni etiquetas « Lo nuevo »;
   - las URL largas se sustituyen por « Abrir en … ↗ ».
 - **Enlace de descarga en cada prueba**, justo encima de los pasos (« ↓ ARC_9900001.pdf »), además del zip completo arriba.
+- **La URL de la plataforma y los enlaces** son los de producción, nunca `127.0.0.1` ni la de pruebas: quien lee la guía no está en tu máquina.
 - **Cuentas arriba del todo**, si se piden. Si el artifact se comparte « con cualquiera que tenga el enlace », avisa en una línea.
 - **Traducción completa ES/FR**: títulos, pasos, pastillas, etiquetas de la ampliación (« Étape 2/4 ») y el bloque final.
   - Los nombres de botones de la aplicación se dejan como salen en pantalla, entre « ».
@@ -129,6 +130,9 @@ Las dos plantillas (`assets/novedades/gabarit.html` y `assets/guia_pruebas/gabar
                                    "p": [["« Commandes fournisseurs »: busca 9900001 y pulsa ARC.", "arc_1"], ["…", "arc_2"]]}]}]},
   "fr": {…mismas secciones, fichas, id, capturas y ficheros…}}
 ```
-- `kit` acepta un nombre (que se pega a `kit_url`) o una URL completa.
+- `kit` acepta un nombre (que se pega a `kit_url`) o una URL completa. **Sin kit** (`"kit": []` y sin `kit_url`) no salen las pastillas, ni arriba ni en las fichas.
+- `disp` es texto libre y **se traduce**: Ordenador / Ordinateur, Tablet / Tablette, Móvil / Téléphone. Debe coincidir con el viewport de las capturas de esa ficha.
+- `nivel` de cada cuenta: **14 caracteres como máximo** (« Comercial », « Atelier »). Si hace falta precisar (« perfil Lamine »), va en `ve`.
+- **Demo sin persistencia** (nada se guarda): sin `kit`; `prep` = « <b>Todo está preparado</b>: la demo trae datos ficticios y no guarda nada. Lo que cuenta es el perfil que eliges al entrar; la contraseña puede ser cualquiera. »; `fin` = « No hay nada que borrar: al recargar la página todo vuelve a como estaba. ». Y en `cuentas`, el perfil que hay que elegir.
 - `cuenta` es el `n` de una cuenta. Sin `cuentas`, no salen las filas de cuentas ni la pastilla.
 - Un paso cuya captura sea `""` se muestra en la lista pero no cambia la captura.

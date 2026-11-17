@@ -11,6 +11,9 @@ Uso como módulo (recorridos complejos):
         ...
     cap.fin()
 
+Explorar la aplicación antes de elegir pantallas (página completa de cada ruta + recursos rotos):
+    python capturas_base.py --explorar guion.json rutas.txt      -> explora/explora_<ruta>.png
+
 Uso con guion JSON:
     python capturas_base.py guion.json
     {"base_url": "https://…", "salida": "capturas",
@@ -20,6 +23,9 @@ Uso con guion JSON:
         "pasos": [{"ir": "/commandes/"}, {"rellenar": ["#q", "9900001"]}, {"clic": "text=ARC"},
                   {"subir": ["input[type=file]", "kit/ARC.pdf"]}, {"esperar": ".resultat"},
                   {"captura": "arc_3", "marcas": [".resultat", "#id_date"], "haut": null}]}]}
+    Otros pasos: {"elegir": [sel, valor]}, {"tecla": "Escape"}, {"pausa": ms}, {"pasar": sel} (hover, menús),
+    {"arrastrar": [origen, destino]} (kanban), y en "captura" "toasts": true para dejar ver el toast.
+    Login solo por perfil: en la cuenta {"clics": ["label[for=p-lamine]"]} y usuario/clave vacíos o los de la pantalla.
 
 Recuadros: % del viewport (no de la página entera), margen de 6 px, en <salida>/boites.json
 ({"arc_1": {"b": [[x, y, w, h], ...], "w": 1440, "h": 900}}). La página solo se desplaza hacia el
@@ -104,12 +110,18 @@ class Capturador:
         self.page = self.ctx.new_page()
         return self.page
 
-    def connecter(self, usuario, clave, url=None, sel_usuario=None, sel_clave=None, sel_entrar=None, esperar=None):
-        """Inicia sesión con una cuenta. Después de entrar espera a que cambie la URL (o al selector `esperar`)."""
+    def connecter(self, usuario, clave, url=None, sel_usuario=None, sel_clave=None, sel_entrar=None, esperar=None, clics=None):
+        """Inicia sesión con una cuenta. Después de entrar espera a que cambie la URL (o al selector `esperar`).
+        clics: selectores que se pulsan antes de « entrar » (elegir un perfil, aceptar cookies, una pestaña…).
+        Con usuario/clave vacíos no se rellenan esos campos (login solo por perfil)."""
         pg = self.page
         pg.goto(self.url(url or LOGIN["url"]), wait_until="domcontentloaded")
-        pg.locator(sel_usuario or LOGIN["usuario"]).first.fill(usuario)
-        pg.locator(sel_clave or LOGIN["clave"]).first.fill(clave)
+        if usuario:
+            pg.locator(sel_usuario or LOGIN["usuario"]).first.fill(usuario)
+        if clave:
+            pg.locator(sel_clave or LOGIN["clave"]).first.fill(clave)
+        for c in clics or []:
+            pg.locator(c).first.click()
         antes = pg.url
         pg.locator(sel_entrar or LOGIN["entrar"]).first.click()
         if esperar:
@@ -122,17 +134,28 @@ class Capturador:
     def _loc(self, m):
         return self.page.locator(m).first if isinstance(m, str) else m
 
-    def shot(self, nombre, *marcas, haut=None, pausa=350):
+    def shot(self, nombre, *marcas, haut=None, pausa=350, toasts=False, raton_fuera=True):
         """Captura del viewport y recuadros en % (el primero lleva la etiqueta del paso en la guía).
-        marcas: selectores, Locators o dicts {"x","y","w","h"} en px del viewport."""
+        marcas: selectores, Locators o dicts {"x","y","w","h"} en px del viewport.
+        toasts=True: deja ver los toasts en esta captura (solo cuando el toast ES el resultado del paso)."""
         pg = self.page
-        pg.add_style_tag(content=self._css_ocultar())
+        if toasts:
+            pg.add_style_tag(content=",".join(self.ocultar) + "{display:revert!important}")
+        else:
+            pg.add_style_tag(content=self._css_ocultar())
+        vp = pg.viewport_size
         if haut:
             self._loc(haut).evaluate("e => e.scrollIntoView({block: 'start'})")
         elif marcas and not isinstance(marcas[0], dict):
-            self._loc(marcas[0]).scroll_into_view_if_needed()
+            primero = self._loc(marcas[0])
+            primero.scroll_into_view_if_needed()
+            r = primero.bounding_box()
+            # pegado al borde tras el desplazamiento: margen de 80 px para que se vean el recuadro y su etiqueta
+            if r and (r["y"] < 40 or r["y"] + r["height"] > vp["height"] - 10) and r["height"] < vp["height"] - 120:
+                pg.evaluate(f"window.scrollBy(0, {r['y'] - 80})")
+        if raton_fuera:
+            pg.mouse.move(vp["width"] - 1, vp["height"] - 1)  # sin hover ni tooltip del clic anterior
         pg.wait_for_timeout(pausa)
-        vp = pg.viewport_size
         b = []
         for m in marcas:
             if isinstance(m, dict):
@@ -144,8 +167,15 @@ class Capturador:
                     continue
                 r = {"x": r["x"], "y": r["y"], "w": r["width"], "h": r["height"]}
             k = self.marge
-            b.append([round((r["x"] - k) / vp["width"] * 100, 2), round((r["y"] - k) / vp["height"] * 100, 2),
-                      round((r["w"] + 2 * k) / vp["width"] * 100, 2), round((r["h"] + 2 * k) / vp["height"] * 100, 2)])
+            x0, y0 = max(r["x"] - k, 0), max(r["y"] - k, 0)
+            x1, y1 = min(r["x"] + r["w"] + k, vp["width"]), min(r["y"] + r["h"] + k, vp["height"])
+            if x1 <= x0 or y1 <= y0:
+                print(f"AVISO {nombre}: « {m} » está fuera de la pantalla; recuadro omitido (usa haut=)")
+                continue
+            if (x0, y0, x1, y1) != (r["x"] - k, r["y"] - k, r["x"] + r["w"] + k, r["y"] + r["h"] + k):
+                print(f"AVISO {nombre}: « {m} » no cabe entero en pantalla; recuadro recortado a lo visible")
+            b.append([round(x0 / vp["width"] * 100, 2), round(y0 / vp["height"] * 100, 2),
+                      round((x1 - x0) / vp["width"] * 100, 2), round((y1 - y0) / vp["height"] * 100, 2)])
         destino = self.salida / f"{nombre}.png"
         pg.screenshot(path=str(destino))
         self.boites[nombre] = {"b": b, "w": vp["width"], "h": vp["height"]}
@@ -207,6 +237,12 @@ def _paso(cap, p, base_guion):
     elif "subir" in p:
         f = Path(p["subir"][1])
         pg.locator(p["subir"][0]).first.set_input_files(str(f if f.is_absolute() else base_guion / f))
+    elif "pasar" in p:
+        pg.locator(p["pasar"]).first.hover()
+        pg.wait_for_timeout(300)
+    elif "arrastrar" in p:
+        pg.locator(p["arrastrar"][0]).first.drag_to(pg.locator(p["arrastrar"][1]).first)
+        pg.wait_for_timeout(300)
     elif "tecla" in p:
         pg.keyboard.press(p["tecla"])
     elif "esperar" in p:
@@ -214,12 +250,39 @@ def _paso(cap, p, base_guion):
     elif "pausa" in p:
         pg.wait_for_timeout(p["pausa"])
     elif "captura" in p:
-        cap.shot(p["captura"], *p.get("marcas", []), haut=p.get("haut"))
+        cap.shot(p["captura"], *p.get("marcas", []), haut=p.get("haut"), toasts=p.get("toasts", False))
     else:
         raise SystemExit(f"paso desconocido: {p}")
 
 
+def explorar(base_url, rutas_txt, salida, cuenta=None, login=None, dispositivo="pc"):
+    """Captura de página completa de cada ruta de rutas.txt (una por línea) para elegir pantallas.
+    Señala los 4xx/5xx de la página y de sus recursos (CSS/JS rotos = pantalla que no se debe enseñar)."""
+    rutas = [l.strip() for l in Path(rutas_txt).read_text(encoding="utf-8").splitlines() if l.strip() and not l.startswith("#")]
+    cap = Capturador(base_url, salida, dispositivo)
+    if cuenta:
+        lg = dict(LOGIN, **(login or {}))
+        cap.connecter(cuenta.get("usuario", ""), cuenta.get("clave", ""), lg["url"], lg["usuario"], lg["clave"], lg["entrar"],
+                      lg.get("esperar"), cuenta.get("clics", []) + lg.get("clics", []))
+    malos = []
+    cap.page.on("response", lambda r: malos.append(f"{r.status} {r.url}") if r.status >= 400 and not r.url.endswith("favicon.ico") else None)
+    for ruta in rutas:
+        malos.clear()
+        cap.page.goto(cap.url(ruta), wait_until="networkidle")
+        nombre = "explora_" + (ruta.strip("/").replace("/", "_") or "inicio")
+        cap.page.screenshot(path=str(Path(salida) / f"{nombre}.png"), full_page=True)
+        print(f"{'ROTA' if malos else 'ok  '} {ruta} -> {nombre}.png" + (f"  {malos[:3]}" if malos else ""))
+    cap.fin()
+
+
 def main():
+    if len(sys.argv) >= 4 and sys.argv[1] == "--explorar":
+        # python capturas_base.py --explorar guion.json rutas.txt  (usa base_url, login y la 1.ª cuenta del guion)
+        guion = Path(sys.argv[2]).resolve()
+        g = json.loads(guion.read_text(encoding="utf-8"))
+        cuenta = next(iter(g.get("cuentas", {}).values()), None)
+        explorar(g["base_url"], sys.argv[3], guion.parent / "explora", cuenta, g.get("login"), g.get("dispositivo", "pc"))
+        return
     if len(sys.argv) != 2:
         sys.exit(__doc__)
     ruta = Path(sys.argv[1]).resolve()
@@ -235,7 +298,8 @@ def main():
             if r.get("cuenta") and r["cuenta"] != sesion:
                 c = g["cuentas"][r["cuenta"]]
                 cap.nueva_pagina(cap.dispositivo, limpia=True)
-                cap.connecter(c["usuario"], c["clave"], login["url"], login["usuario"], login["clave"], login["entrar"], login.get("esperar"))
+                cap.connecter(c.get("usuario", ""), c.get("clave", ""), login["url"], login["usuario"], login["clave"], login["entrar"],
+                              login.get("esperar"), c.get("clics", []) + login.get("clics", []))
                 sesion = r["cuenta"]
             if r.get("video"):
                 with cap.video(r["video"], r.get("ir")):

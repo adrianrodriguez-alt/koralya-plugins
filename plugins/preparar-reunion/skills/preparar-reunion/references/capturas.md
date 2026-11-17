@@ -44,10 +44,13 @@ cap.fin()
 
   El dispositivo de la captura es el de la ficha. En pruebas, la pastilla « Tablet » tiene que llevar capturas de tablet.
 - **Chromium en francés**: ya lo hace el script (`--lang=fr-FR`, `LANG=fr_FR.UTF-8`, `locale="fr-FR"`). Sin eso, las fechas salen en formato estadounidense.
+- **Login por perfil**: si la pantalla de entrada pide elegir un perfil (botones o radios) en vez de, o además de, usuario y contraseña, pasa `clics=["label[for=p-lamine]"]` a `connecter()`, o `"clics"` en la cuenta del guion JSON. Usuario y contraseña vacíos no se rellenan.
+- **Menús al pasar el ratón y arrastrar**: `pg.hover(sel)` y `pg.drag_and_drop(origen, destino)`. En el guion JSON son `{"pasar": sel}` y `{"arrastrar": [origen, destino]}`. Para un menú desplegable, haz `pasar` justo antes de la captura.
 - **Sin toasts.** El script oculta `#toasts`, `.toast`, `.messages`… Si la aplicación usa otro selector, pásalo con `ocultar=[…]` (o `"ocultar"` en el guion).
+  Excepción: si el toast **es** el único resultado visible del paso (« Devis envoyé »), captúralo con `shot(…, toasts=True)` (`"toasts": true` en el guion) y pon el recuadro sobre el toast. Si no aporta nada, deja ese último paso sin captura (`""` en el JSON).
 - **Acciones automáticas**: si al elegir un tipo ya se pasa al paso siguiente, no pulses además « Siguiente ».
 - **IA real** (lectura de PDF, propuestas): tarda entre 3 y 60 s. Espera a un selector concreto, nunca un tiempo fijo.
-- **Vídeos**, solo para lo que se entiende mejor en movimiento (3D, arrastrar, un asistente que escribe, un ajuste por lote):
+- **Vídeos** (solo en **novedades**: la guía de pruebas no los muestra; allí un arrastre se explica con dos capturas, antes y después), solo para lo que se entiende mejor en movimiento (3D, arrastrar, un asistente que escribe, un ajuste por lote):
   - duración de 10 a 25 s, sin pausas muertas;
   - `cap.video(nombre)` graba `.webm` y saca la portada `_poster.png`;
   - si hay ffmpeg, `construir_guia.py` lo pasa a `.mp4`;
